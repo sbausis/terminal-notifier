@@ -1,4 +1,5 @@
 require 'shellwords'
+require 'rbconfig'
 
 module TerminalNotifier
   BIN_PATH = File.expand_path('../../vendor/terminal-notifier/terminal-notifier.app/Contents/MacOS/terminal-notifier', __FILE__)
@@ -6,7 +7,7 @@ module TerminalNotifier
   class UnsupportedPlatformError < StandardError; end
   # Returns wether or not the current platform is Mac OS X 10.8, or higher.
   def self.available?
-    @available ||= Gem::Version.new(version) > Gem::Version.new('10.8')
+    @available ||= (/darwin|mac os/ =~ RbConfig::CONFIG['host_os']) && Gem::Version.new(version) > Gem::Version.new('10.8')
   end
 
   def self.version
@@ -25,7 +26,7 @@ module TerminalNotifier
       end
       result
     else
-      raise UnsupportedPlatformError, "terminal-notifier is only supported on Mac OS X 10.8, or higher."
+      STDERR.print "terminal-notifier is only supported on Mac OS X 10.8, or higher."
     end
   end
 
@@ -50,7 +51,7 @@ module TerminalNotifier
   # Raises if not supported on the current platform.
   def notify(message, options = {}, verbose = false)
     TerminalNotifier.execute(verbose, options.merge(:message => message))
-    $?.success?
+    $? && $?.success?
   end
   module_function :notify
 
@@ -60,7 +61,7 @@ module TerminalNotifier
   # If no ‘group’ ID is given, all notifications are removed.
   def remove(group = 'ALL', verbose = false)
     TerminalNotifier.execute(verbose, :remove => group)
-    $?.success?
+    $? && $?.success?
   end
   module_function :remove
 
